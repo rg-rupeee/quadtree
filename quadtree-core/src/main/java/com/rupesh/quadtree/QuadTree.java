@@ -12,8 +12,6 @@ public interface QuadTree<T> {
 
 	boolean remove(Point point);
 
-	Entry<T> update(Point point, T updatedData);
-
 	List<Entry<T>> query(Point point, double width, double height);
 
 	List<Entry<T>> query(Point point, double radius);

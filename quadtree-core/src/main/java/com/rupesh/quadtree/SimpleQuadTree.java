@@ -22,22 +22,29 @@ public class SimpleQuadTree<T> implements QuadTree<T>{
 			throw new Error("Point does not lie withing the QuadTree Boundaries");
 		}
 
-		return null;
+		return this._insert(this.root, point, data);
 	}
 
 	@Override
 	public boolean exists(Point point) {
-		return false;
+		if(!root.getBoundary().contains(point)){
+			// TODO: Throw custom exception
+			throw new Error("Point does not lie withing the QuadTree Boundaries");
+		}
+
+		Entry<T> entry = this.root.findPoint(point);
+
+		return entry != null;
 	}
 
 	@Override
 	public boolean remove(Point point) {
-		return false;
-	}
+		if(!root.getBoundary().contains(point)){
+			// TODO: Throw custom exception
+			throw new Error("Point does not lie withing the QuadTree Boundaries");
+		}
 
-	@Override
-	public Entry<T> update(Point point, T updatedData) {
-		return null;
+		return this._remove(this.root, point);
 	}
 
 	@Override
@@ -71,5 +78,21 @@ public class SimpleQuadTree<T> implements QuadTree<T>{
 		QuadTreeNode<T> targetNode = node.getContainer(point);
 
 		return _insert(targetNode, point, data);
+	}
+
+	private boolean _remove(QuadTreeNode<T> node, Point point){
+		Entry<T> entry = node.findPoint(point);
+		if(entry != null){
+			node.removeEntry(entry);
+			return true;
+		}
+
+		if(node.isLeafNode()){
+			return false;
+		}
+
+		QuadTreeNode<T> targetNode = node.getContainer(point);
+
+		return _remove(targetNode, point);
 	}
 }

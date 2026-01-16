@@ -43,6 +43,26 @@ public class QuadTreeNode<T> {
 		return entries.size();
 	}
 
+	public Entry<T> findPoint(Point p){
+		// Return null if point is outside this node's boundary
+		if (!this.boundary.contains(p)) {
+			return null;
+		}
+
+		// If this is a leaf, search entries directly
+		if (isLeafNode()) {
+			for (Entry<T> entry : this.entries) {
+				if (entry.point().equals(p)) {
+					return entry;
+				}
+			}
+			return null;
+		}
+
+		// Otherwise, delegate to the appropriate child node
+		return this.getContainer(p).findPoint(p);
+	}
+
 	public void addEntry(Entry<T> entry) {
 		this.entries.add(entry);
 	}
