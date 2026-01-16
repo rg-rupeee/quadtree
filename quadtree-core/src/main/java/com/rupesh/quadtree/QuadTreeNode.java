@@ -1,5 +1,6 @@
 package com.rupesh.quadtree;
 
+import com.rupesh.quadtree.geometry.Point;
 import com.rupesh.quadtree.geometry.Rectangle;
 import com.rupesh.quadtree.util.Entry;
 
@@ -30,9 +31,6 @@ public class QuadTreeNode<T> {
 	}
 
 
-	/*
-		Getters And Setters
-	*/
 	public Rectangle getBoundary() {
 		return boundary;
 	}
@@ -41,12 +39,20 @@ public class QuadTreeNode<T> {
 		return entries;
 	}
 
+	public int getEntriesCount() {
+		return entries.size();
+	}
+
 	public void addEntry(Entry<T> entry) {
 		this.entries.add(entry);
 	}
 
 	public void removeEntry(Entry<T> entry) {
 		this.entries.remove(entry);
+	}
+
+	public void clearEntries(){
+		this.entries.clear();
 	}
 
 	public QuadTreeNode<T> getTopLeftNode() {
@@ -89,11 +95,51 @@ public class QuadTreeNode<T> {
 		this.parent = parent;
 	}
 
-
-	/*
-		Utility Methods
-	*/
 	public boolean isLeafNode() {
 		return topLeftNode == null && topRightNode == null && bottomLeftNode == null && bottomRightNode == null;
+	}
+
+	public void subdivide(){
+		double x = boundary.getX();
+		double y = boundary.getY();
+		double w = boundary.getWidth() / 2;
+		double h = boundary.getHeight() / 2;
+
+		this.topLeftNode = new QuadTreeNode<>(new Rectangle(x, y, w, h));
+		this.topRightNode = new QuadTreeNode<>(new Rectangle(x+w, y, w, h));
+		this.bottomLeftNode = new QuadTreeNode<>(new Rectangle(x, y+h, w, h));
+		this.bottomRightNode = new QuadTreeNode<>(new Rectangle(x+w, y+h, w, h));
+
+		this.topLeftNode.setParent(this);
+		this.topRightNode.setParent(this);
+		this.bottomLeftNode.setParent(this);
+		this.bottomRightNode.setParent(this);
+
+		// move all points
+		for(Entry<T> entry : entries){
+			this.getContainer(entry.point()).addEntry(entry);
+		}
+
+		this.clearEntries();
+	}
+
+	public QuadTreeNode<T> getContainer(Point point){
+		if(this.topLeftNode.getBoundary().contains(point)){
+			return this.topLeftNode;
+		}
+
+		if(this.topRightNode.getBoundary().contains(point)){
+			return this.topRightNode;
+		}
+
+		if(this.bottomLeftNode.getBoundary().contains(point)){
+			return this.bottomLeftNode;
+		}
+
+		if(this.bottomRightNode.getBoundary().contains(point)){
+			return this.bottomRightNode;
+		}
+
+		throw new Error("Point does not lie withing any child nodes");
 	}
 }
