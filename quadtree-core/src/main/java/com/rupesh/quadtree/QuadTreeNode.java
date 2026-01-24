@@ -1,5 +1,6 @@
 package com.rupesh.quadtree;
 
+import com.rupesh.quadtree.geometry.Circle;
 import com.rupesh.quadtree.geometry.Point;
 import com.rupesh.quadtree.geometry.Rectangle;
 import com.rupesh.quadtree.util.Entry;
@@ -144,6 +145,7 @@ public class QuadTreeNode<T> {
 	}
 
 	public QuadTreeNode<T> getContainer(Point point){
+		// With half-open intervals, each point will belong to exactly one quadrant
 		if(this.topLeftNode.getBoundary().contains(point)){
 			return this.topLeftNode;
 		}
@@ -160,6 +162,120 @@ public class QuadTreeNode<T> {
 			return this.bottomRightNode;
 		}
 
-		throw new Error("Point does not lie withing any child nodes");
+		// This should only happen for points exactly on the right/bottom boundary
+		// of the entire node - assign to the appropriate edge quadrant
+		double midX = boundary.getX() + boundary.getWidth() / 2;
+		double midY = boundary.getY() + boundary.getHeight() / 2;
+
+		if (point.x() < midX) {
+			return point.y() < midY ? this.topLeftNode : this.bottomLeftNode;
+		} else {
+			return point.y() < midY ? this.topRightNode : this.bottomRightNode;
+		}
+	}
+
+	public void queryRange(Rectangle range, List<Entry<T>> results) {
+		// If range doesn't intersect this node's boundary, return
+		if (!this.boundary.intersects(range)) {
+			return;
+		}
+
+		// If this is a leaf node, check all entries
+		if (isLeafNode()) {
+			for (Entry<T> entry : this.entries) {
+				if (range.containsInclusive(entry.point())) {
+					results.add(entry);
+				}
+			}
+			return;
+		}
+
+		// Otherwise, recursively check all children
+		this.topLeftNode.queryRange(range, results);
+		this.topRightNode.queryRange(range, results);
+		this.bottomLeftNode.queryRange(range, results);
+		this.bottomRightNode.queryRange(range, results);
+	}
+
+	public void queryCircle(Circle circle, List<Entry<T>> results) {
+		// If circle doesn't intersect this node's boundary, return
+		if (!circle.intersects(this.boundary)) {
+			return;
+		}
+
+		// If this is a leaf node, check all entries
+		if (isLeafNode()) {
+			for (Entry<T> entry : this.entries) {
+				if (circle.contains(entry.point())) {
+					results.add(entry);
+				}
+			}
+			return;
+		}
+
+		// Otherwise, recursively check all children
+		this.topLeftNode.queryCircle(circle, results);
+		this.topRightNode.queryCircle(circle, results);
+		this.bottomLeftNode.queryCircle(circle, results);
+		this.bottomRightNode.queryCircle(circle, results);
+	}
+
+	public int getTotalEntriesCount() {
+		if (isLeafNode()) {
+			return this.entries.size();
+		}
+
+		return this.topLeftNode.getTotalEntriesCount() +
+			   this.topRightNode.getTotalEntriesCount() +
+			   this.bottomLeftNode.getTotalEntriesCount() +
+			   this.bottomRightNode.getTotalEntriesCount();
+	}
+
+	public boolean canMerge(int threshold) {
+		// Can only merge if this is not a leaf node
+		if (isLeafNode()) {
+			return false;
+		}
+
+		// Check if all children are leaf nodes
+		if (!topLeftNode.isLeafNode() || !topRightNode.isLeafNode() ||
+			!bottomLeftNode.isLeafNode() || !bottomRightNode.isLeafNode()) {
+			return false;
+		}
+
+		// Check if total entries across all children is below threshold
+		return getTotalEntriesCount() <= threshold;
+	}
+
+	public void merge() {
+		if (isLeafNode()) {
+			return;
+		}
+
+		// Collect all entries from children
+		List<Entry<T>> allEntries = new ArrayList<>();
+		collectEntries(allEntries);
+
+		// Clear children
+		this.topLeftNode = null;
+		this.topRightNode = null;
+		this.bottomLeftNode = null;
+		this.bottomRightNode = null;
+
+		// Add all entries to this node
+		this.entries.clear();
+		this.entries.addAll(allEntries);
+	}
+
+	private void collectEntries(List<Entry<T>> results) {
+		if (isLeafNode()) {
+			results.addAll(this.entries);
+			return;
+		}
+
+		this.topLeftNode.collectEntries(results);
+		this.topRightNode.collectEntries(results);
+		this.bottomLeftNode.collectEntries(results);
+		this.bottomRightNode.collectEntries(results);
 	}
 }

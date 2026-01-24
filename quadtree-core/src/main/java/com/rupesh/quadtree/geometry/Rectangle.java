@@ -46,6 +46,16 @@ public class Rectangle {
 	}
 
 	public boolean contains(Point point) {
+		// Using half-open interval [x, x+width) x [y, y+height) to ensure
+		// points on boundaries belong to exactly one quadrant
+		return point.x() >= x &&
+			   point.x() < x + width &&
+			   point.y() >= y &&
+			   point.y() < y + height;
+	}
+
+	public boolean containsInclusive(Point point) {
+		// Inclusive bounds check for root boundary validation
 		return point.x() >= x &&
 			   point.x() <= x + width &&
 			   point.y() >= y &&

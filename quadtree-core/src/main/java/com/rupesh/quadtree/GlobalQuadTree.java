@@ -10,7 +10,7 @@ public class GlobalQuadTree<T> extends SimpleQuadTree<T>{
 			180
 	);
 
-	GlobalQuadTree(int splitThreshold){
+	public GlobalQuadTree(int splitThreshold){
 		super(splitThreshold, WORLD_BOUNDARY);
 	}
 }
