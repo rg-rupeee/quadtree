@@ -342,6 +342,3 @@ Point A exists: false
 - `IllegalArgumentException` - Invalid parameters
 
 ---
-
-**Need Help?** See IMPROVEMENTS.md for detailed implementation notes and ANALYSIS.md for architectural details.
-
